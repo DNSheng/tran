@@ -1,0 +1,136 @@
+#!/bin/bash
+
+# tran pi@rasp:~/Torrents ~/Storage/Videos/Show
+# Run using ./trantest
+
+# TODO:
+#	- Format the display so that all columns are aligned
+#		- Probably requires using printf()
+# - Add/create md5sum for file transfer
+#		- This checks for file integrity
+#		- If any errors occur, then tell user
+#		- Generate the md5 on the pi for the files used and transfer them over
+
+# Check for arguments (flesh out later)
+if [[ $# -lt 2 ]]; then
+	echo "Insufficent arguments"
+	exit
+elif [[ $# -gt 2 ]]; then
+	echo "Too many arguments"
+	exit
+fi
+
+# Get ssh address and target directory
+addr=$(echo $1 | cut -d : -f1)
+dir=$(echo $1 | cut -d : -f2)
+
+# Local directory to transfer files to
+localdir=$2
+
+# Counter for listing in display
+counter=0
+
+# SSH in and write listed files to a hidden temp file
+ssh $addr "cd $dir && ls -lsh --escape" > .temp.txt
+
+# Error if target directory doesn't exist
+if [[ "$?" != "0" ]]; then
+	exit
+fi
+
+# Read file to display all in target directory
+while read line; do
+	if [[ $counter == 0 ]]; then
+		amount=$(echo $line | cut -d " " -f2)
+		if [[ $amount == 0 ]]; then
+			echo "The folder is empty"
+			exit
+		fi
+		echo -e "\n #\tName\t\t\t\t\t\tSize\tDate"
+		echo "---------------------------------------------------------------------------"
+		counter=$(($counter + 1))
+	fi
+	size=$(echo $line | cut -d " " -f1)
+	if [[ $size != "total" ]]; then
+		month=$(echo $line | cut -d " " -f7)
+		day=$(echo $line | cut -d " " -f8)
+		ftime=$(echo $line | cut -d " " -f9)
+		name=$(echo $line | cut -d " " -f10-)
+		echo -e "[$counter]\t$name\t$size\t$month $day $ftime"
+		counter=$(($counter + 1))
+	fi
+done < .temp.txt
+
+# Get user's selection
+echo -e "\nPlease enter your selection: "
+read selected
+echo ""
+
+# Verify user selection
+for items in $selected; do
+	if [[ $(($items + 1)) -gt $counter ]] || [[ $items -lt 1 ]]; then
+		echo "One or more of items in selection is out of range"
+		exit
+	fi
+done
+
+# Variable to hold string for files to transfer, used for scp
+files=""
+
+# Holds the local address of the files being stored
+localFiles=""
+
+# Variable to hold amount of files being transferred
+numOfFiles=0
+
+# Get items in selection and download
+for items in $selected; do
+	counter=1
+	while read -r line; do
+		initial=$(echo $line | cut -d " " -f1)
+		if [[ $initial != "total" ]]; then
+			if [[ $counter == $items ]]; then
+				name=$(echo $line | cut -d " " -f10-)
+				if [[ $files == "" ]]; then
+					files="$dir/$name"
+					localFiles="$name"
+				else
+					files="$files $dir/$name"
+					localFiles="$localFiles|$name"
+				fi
+				numOfFiles=$(($numOfFiles + 1))
+			fi
+			counter=$(($counter + 1))
+		fi
+	done < .temp.txt
+done
+
+# Transfer all files
+scp $addr:"$files" $localdir
+
+
+## CHECKSUM BLOCK -- UNFINISHED
+# TODO:
+#		- Somehow file names including spaces "\ " won't work
+#			- Something to do with the md5sum
+
+# Variable for for-loop
+#startLoop=1
+
+# Build local checksum
+#for (( item=$startLoop; item<=$numOfFiles; item++ )); do
+#	currentFile=$(echo $localFiles | cut -d "|" -f$item)
+#	if [[ $item == 1 ]]; then
+#		md5sum $localdir$currentFile > $localdir/locmd5.txt
+#	else
+#		md5sum $localdir$currentFile >> $localdir/locmd5.txt
+#	fi
+#done
+
+## CHECKSUM BLOCK -- UNFINISHED
+
+
+# Delete hidden temp file
+rm .temp.txt
+
+echo ""
