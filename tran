@@ -4,12 +4,11 @@
 # Run using ./trantest
 
 # TODO:
-#	- Format the display so that all columns are aligned
-#		- Probably requires using printf()
 # - Add/create md5sum for file transfer
 #		- This checks for file integrity
 #		- If any errors occur, then tell user
 #		- Generate the md5 on the pi for the files used and transfer them over
+#	- Delete the temp file even if it prematurely ends (SIGKILL or SIGTERM)
 
 # Check for arguments (flesh out later)
 if [[ $# -lt 2 ]]; then
@@ -35,6 +34,7 @@ ssh $addr "cd $dir && ls -lsh --escape" > .temp.txt
 
 # Error if target directory doesn't exist
 if [[ "$?" != "0" ]]; then
+	rm .temp.txt
 	exit
 fi
 
@@ -44,10 +44,11 @@ while read line; do
 		amount=$(echo $line | cut -d " " -f2)
 		if [[ $amount == 0 ]]; then
 			echo "The folder is empty"
+			rm .temp.txt
 			exit
 		fi
-		echo -e "\n #\tName\t\t\t\t\t\tSize\tDate"
-		echo "---------------------------------------------------------------------------"
+		printf "%-7s %-60s %-7s %-10s\n" "#" "Name" "Size" "Date"
+		echo "-----------------------------------------------------------------------------------"
 		counter=$(($counter + 1))
 	fi
 	size=$(echo $line | cut -d " " -f1)
@@ -56,7 +57,7 @@ while read line; do
 		day=$(echo $line | cut -d " " -f8)
 		ftime=$(echo $line | cut -d " " -f9)
 		name=$(echo $line | cut -d " " -f10-)
-		echo -e "[$counter]\t$name\t$size\t$month $day $ftime"
+		printf "%-7s %-60s %-7s %-10s\n" "[$counter]" "$name" "$size" "$month $day $time"
 		counter=$(($counter + 1))
 	fi
 done < .temp.txt
@@ -70,6 +71,7 @@ echo ""
 for items in $selected; do
 	if [[ $(($items + 1)) -gt $counter ]] || [[ $items -lt 1 ]]; then
 		echo "One or more of items in selection is out of range"
+		rm .temp.txt
 		exit
 	fi
 done
@@ -106,7 +108,7 @@ for items in $selected; do
 done
 
 # Transfer all files
-scp $addr:"$files" $localdir
+scp -r $addr:"$files" $localdir
 
 
 ## CHECKSUM BLOCK -- UNFINISHED
