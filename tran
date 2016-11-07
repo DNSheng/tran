@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # tran pi@rasp:~/Torrents ~/Storage/Videos/Show
-# Run using ./trantest
 
 # TODO:
 # - Add/create md5sum for file transfer
@@ -19,7 +18,7 @@ elif [[ $# -gt 2 ]]; then
 	exit
 fi
 
-# Get ssh address and target directory
+# Get ssh address and remote directory
 addr=$(echo $1 | cut -d : -f1)
 dir=$(echo $1 | cut -d : -f2)
 
@@ -32,13 +31,16 @@ counter=0
 # SSH in and write listed files to a hidden temp file
 ssh $addr "cd $dir && ls -lsh --escape" > .temp.txt
 
-# Error if target directory doesn't exist
+# Error if remote directory doesn't exist
 if [[ "$?" != "0" ]]; then
 	rm .temp.txt
 	exit
 fi
 
-# Read file to display all in target directory
+# Display the remote directory
+echo -e "\n$dir:"
+
+# Read file to display all in remote directory
 while read line; do
 	if [[ $counter == 0 ]]; then
 		amount=$(echo $line | cut -d " " -f2)
@@ -47,30 +49,54 @@ while read line; do
 			rm .temp.txt
 			exit
 		fi
-		printf "%-7s %-60s %-7s %-10s\n" "#" "Name" "Size" "Date"
-		echo "-----------------------------------------------------------------------------------"
+		printf "%-4s %-7s %-60s %-7s %-10s\n" " #" "Type" "Name" "Size" "Date"
+		echo "----------------------------------------------------------------------------------------"
 		counter=$(($counter + 1))
 	fi
 	size=$(echo $line | cut -d " " -f1)
 	if [[ $size != "total" ]]; then
+		permissions=$(echo $line | cut -d " " -f2)
+		dirCheck=$(echo $permissions | head -c 1)
+		if [[ $dirCheck == "d" ]]; then
+			fileType="D"
+		else
+			fileType="F"
+		fi
 		month=$(echo $line | cut -d " " -f7)
 		day=$(echo $line | cut -d " " -f8)
 		ftime=$(echo $line | cut -d " " -f9)
 		name=$(echo $line | cut -d " " -f10-)
-		printf "%-7s %-60s %-7s %-10s\n" "[$counter]" "$name" "$size" "$month $day $time"
+		printf "%-4s %-7s %-60s %-7s %-10s\n" "[$counter]" "[$fileType]" "$name" "$size" "$month $day $time"
 		counter=$(($counter + 1))
 	fi
 done < .temp.txt
 
 # Get user's selection
-echo -e "\nPlease enter your selection: "
+printlocaldir=$(pwd)
+echo -e "\nPlease select the files to copy to $printlocaldir:"
 read selected
 echo ""
 
+# Holds all the files selected, seperated by a space.
+# Needed due to the inclusion of ranges (ie. 3-5)
+newSelected=""
+
 # Verify user selection
 for items in $selected; do
-	if [[ $(($items + 1)) -gt $counter ]] || [[ $items -lt 1 ]]; then
+	startNum=$(echo $items | cut -d "-" -f1)
+	endNum=$(echo $items | cut -d "-" -f2)
+	if [[ $endNum -gt $counter ]] || [[ $startNum -gt $endNum ]]; then
 		echo "One or more of items in selection is out of range"
+		rm .temp.txt
+		exit
+	elif [[ $startNum -gt 0 ]]; then
+		currentItem=$startNum
+		while [[ $currentItem -lt $(($endNum + 1)) ]]; do
+			newSelected="$newSelected $currentItem"
+			currentItem=$(($currentItem + 1))
+		done
+	else
+		echo "Invalid selection"
 		rm .temp.txt
 		exit
 	fi
@@ -86,7 +112,7 @@ localFiles=""
 numOfFiles=0
 
 # Get items in selection and download
-for items in $selected; do
+for items in $newSelected; do
 	counter=1
 	while read -r line; do
 		initial=$(echo $line | cut -d " " -f1)
