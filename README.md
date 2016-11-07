@@ -43,6 +43,10 @@ Afterwards, the files will be downloaded.
 - Now allows for selecting a range of files/folders
 - Displays the type of file in the remote folder (directory or normal file)
 - Rewrote the "dashed" line in the display to be more elegant
+- Removed bits of useless code, reformatted
+- Fixed problem with counter incrementing an extra time
+- Now displays time (previously had wrong variable printed)
+- Size is correctly displayed
 
 ## 0.11
 

@@ -49,32 +49,34 @@ while read line; do
 			rm .temp.txt
 			exit
 		fi
-		printf "%-4s %-7s %-60s %-7s %-10s\n" " #" "Type" "Name" "Size" "Date"
-		printf "%0.s-" {1..88}
+		printf "%-5s %-7s %-60s %-8s %-10s\n" " #" "Type" "Name" "Size" "Date"
+		printf "%0.s-" {0..95}
 		echo ""
-		counter=$(($counter + 1))
-	fi
-	size=$(echo $line | cut -d " " -f1)
-	if [[ $size != "total" ]]; then
-		permissions=$(echo $line | cut -d " " -f2)
-		dirCheck=$(echo $permissions | head -c 1)
+	else
+		dirCheck=$(echo $line | cut -d " " -f2 | head -c 1)
 		if [[ $dirCheck == "d" ]]; then
 			fileType="D"
-		else
+		elif [[ $dirCheck == "-" ]]; then
 			fileType="F"
+		else
+			fileType="X"
 		fi
+		size=$(echo $line | cut -d " " -f6)
 		month=$(echo $line | cut -d " " -f7)
 		day=$(echo $line | cut -d " " -f8)
 		ftime=$(echo $line | cut -d " " -f9)
 		name=$(echo $line | cut -d " " -f10-)
-		printf "%-4s %-7s %-60s %-7s %-10s\n" "[$counter]" "[$fileType]" "$name" "$size" "$month $day $time"
-		counter=$(($counter + 1))
+		printf "%-5s %-7s %-60s %-8s %-10s\n" "[$counter]" "[$fileType]" "$name" "$size" "$month $day $ftime"
 	fi
+	counter=$(($counter + 1))
 done < .temp.txt
+
+# Undo the extra increment to counter
+counter=$(($counter - 1))
 
 # Get user's selection
 printlocaldir=$(pwd)
-echo -e "\nPlease select the files to copy to $printlocaldir:"
+echo -e "\nTransferring to $printlocaldir\nPlease select files to transfer:"
 read selected
 echo ""
 
@@ -106,10 +108,12 @@ done
 # Variable to hold string for files to transfer, used for scp
 files=""
 
-# Holds the local address of the files being stored
+# Holds the local address of the files being stored (used for md5sum)
+# Currently useless
 localFiles=""
 
-# Variable to hold amount of files being transferred
+# Variable to hold amount of files being transferred (used for md5sum)
+# Currently useless
 numOfFiles=0
 
 # Get items in selection and download
