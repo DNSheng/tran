@@ -50,7 +50,8 @@ while read line; do
 			exit
 		fi
 		printf "%-4s %-7s %-60s %-7s %-10s\n" " #" "Type" "Name" "Size" "Date"
-		echo "----------------------------------------------------------------------------------------"
+		printf "%0.s-" {1..88}
+		echo ""
 		counter=$(($counter + 1))
 	fi
 	size=$(echo $line | cut -d " " -f1)

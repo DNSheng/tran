@@ -34,7 +34,7 @@ Afterwards, the files will be downloaded.
 - Deleting temp file after SIGKILL or SIGTERM
 - Navigation around folders in the remote host
 	- This is hard and will come late (if at all)
-- Clean up spaghetti code (unlikely, I may be the only one who will ever see and use this)
+- Clean up garbage code (unlikely, I may be the only one who will ever see and use this)
 
 # Versions
 
@@ -42,6 +42,7 @@ Afterwards, the files will be downloaded.
 
 - Now allows for selecting a range of files/folders
 - Displays the type of file in the remote folder (directory or normal file)
+- Rewrote the "dashed" line in the display to be more elegant
 
 ## 0.11
 
