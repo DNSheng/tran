@@ -1,4 +1,4 @@
-# tran v 0.12
+# tran v 0.13
 Transfers files over scp in a graphical(?) way.
 
 # Description

@@ -38,7 +38,7 @@ if [[ "$?" != "0" ]]; then
 	exit
 fi
 
-# For display purposes
+# Displays by getting first line of temp file (is pwd from ssh)
 remotedir=$(sed '1q;d' .temp.txt)
 
 # Display the remote directory
