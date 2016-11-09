@@ -1,4 +1,4 @@
-# tran v 0.13
+# tran v 0.13.1
 Transfers files over scp in a graphical(?) way.
 
 # Description
@@ -37,6 +37,11 @@ Afterwards, the files will be downloaded.
 - Clean up garbage code (unlikely, I may be the only one who will ever see and use this)
 
 # Versions
+
+## 0.13.1
+
+- Fixed critical problem with downloading (would retrieve wrong files)
+	- Caused due to altering temp file with name of remote directory
 
 ## 0.13
 

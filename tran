@@ -46,33 +46,35 @@ echo -e "\n$remotedir:"
 
 # Read file to display all in remote directory
 while read line; do
-	if [[ $counter == 0 ]]; then
-		amount=$(echo $line | cut -d " " -f2)
-		if [[ $amount == 0 ]]; then
-			echo "The folder is empty"
-			rm .temp.txt
-			exit
-		fi
-		printf "%-5s %-7s %-60s %-8s %-10s\n" " #" "Type" "Name" "Size" "Date"
-		printf "%0.s-" {0..95}
-		echo ""
-	else
-		dirCheck=$(echo $line | cut -d " " -f2 | head -c 1)
-		if [[ $dirCheck == "d" ]]; then
-			fileType="D"
-		elif [[ $dirCheck == "-" ]]; then
-			fileType="F"
+	if [[ ! $line == $remotedir ]]; then
+		if [[ $counter == 0 ]]; then
+			amount=$(echo $line | cut -d " " -f2)
+			if [[ $amount == 0 ]]; then
+				echo "The folder is empty"
+				rm .temp.txt
+				exit
+			fi
+			printf "%-5s %-7s %-60s %-8s %-10s\n" " #" "Type" "Name" "Size" "Date"
+			printf "%0.s-" {0..95}
+			echo ""
 		else
-			fileType="X"
+			dirCheck=$(echo $line | cut -d " " -f2 | head -c 1)
+			if [[ $dirCheck == "d" ]]; then
+				fileType="D"
+			elif [[ $dirCheck == "-" ]]; then
+				fileType="F"
+			else
+				fileType="X"
+			fi
+			size=$(echo $line | cut -d " " -f6)
+			month=$(echo $line | cut -d " " -f7)
+			day=$(echo $line | cut -d " " -f8)
+			ftime=$(echo $line | cut -d " " -f9)
+			name=$(echo $line | cut -d " " -f10-)
+			printf "%-5s %-7s %-60s %-8s %-10s\n" "[$counter]" "[$fileType]" "$name" "$size" "$month $day $ftime"
 		fi
-		size=$(echo $line | cut -d " " -f6)
-		month=$(echo $line | cut -d " " -f7)
-		day=$(echo $line | cut -d " " -f8)
-		ftime=$(echo $line | cut -d " " -f9)
-		name=$(echo $line | cut -d " " -f10-)
-		printf "%-5s %-7s %-60s %-8s %-10s\n" "[$counter]" "[$fileType]" "$name" "$size" "$month $day $ftime"
+		counter=$(($counter + 1))
 	fi
-	counter=$(($counter + 1))
 done < .temp.txt
 
 # Undo the extra increment to counter
@@ -128,7 +130,7 @@ for items in $newSelected; do
 	counter=1
 	while read -r line; do
 		initial=$(echo $line | cut -d " " -f1)
-		if [[ $initial != "total" ]]; then
+		if [[ $initial != "total" ]] && [[ $initial != $remotedir ]]; then
 			if [[ $counter == $items ]]; then
 				name=$(echo $line | cut -d " " -f10-)
 				if [[ $files == "" ]]; then
@@ -147,7 +149,6 @@ done
 
 # Transfer all files
 scp -r $addr:"$files" $localdir
-
 
 ## CHECKSUM BLOCK -- UNFINISHED
 # TODO:
