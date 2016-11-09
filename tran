@@ -71,7 +71,7 @@ while read line; do
 			day=$(echo $line | cut -d " " -f8)
 			ftime=$(echo $line | cut -d " " -f9)
 			name=$(echo $line | cut -d " " -f10-)
-			printf "%-5s %-7s %-60s %-8s %-10s\n" "[$counter]" "[$fileType]" "$name" "$size" "$month $day $ftime"
+			printf "%-5s %-7s %-60s %-8s %-3s %-2s %-5s\n" "[$counter]" "[$fileType]" "$name" "$size" "$month" "$day" "$ftime"
 		fi
 		counter=$(($counter + 1))
 	fi
@@ -135,10 +135,10 @@ for items in $newSelected; do
 				name=$(echo $line | cut -d " " -f10-)
 				if [[ $files == "" ]]; then
 					files="$dir/$name"
-					localFiles="$name"
+					localFiles="$printlocaldir/$name"
 				else
 					files="$files $dir/$name"
-					localFiles="$localFiles|$name"
+					localFiles="$localFiles|$printlocaldir/$name"
 				fi
 				numOfFiles=$(($numOfFiles + 1))
 			fi
@@ -156,17 +156,18 @@ scp -r $addr:"$files" $localdir
 #			- Something to do with the md5sum
 
 # Variable for for-loop
-#startLoop=1
+startLoop=1
 
 # Build local checksum
-#for (( item=$startLoop; item<=$numOfFiles; item++ )); do
-#	currentFile=$(echo $localFiles | cut -d "|" -f$item)
-#	if [[ $item == 1 ]]; then
-#		md5sum $localdir$currentFile > $localdir/locmd5.txt
-#	else
-#		md5sum $localdir$currentFile >> $localdir/locmd5.txt
-#	fi
-#done
+echo -e "\nGenerating local md5sum..."
+for (( item=$startLoop; item<=$numOfFiles; item++ )); do
+	currentFile=$(echo $localFiles | cut -d "|" -f$item)
+	if [[ $item == 1 ]]; then
+		md5sum "$currentFile" > $localdir/locmd5.txt
+	else
+		md5sum "$currentFile" >> $localdir/locmd5.txt
+	fi
+done
 
 ## CHECKSUM BLOCK -- UNFINISHED
 

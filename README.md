@@ -1,4 +1,4 @@
-# tran v 0.13.1
+# tran v 0.14b
 Transfers files over scp in a graphical(?) way.
 
 # Description
@@ -35,12 +35,20 @@ Afterwards, the files will be downloaded.
 - Navigation around folders in the remote host
 	- This is hard and will come late (if at all)
 - Clean up garbage code (unlikely, I may be the only one who will ever see and use this)
+- Replace loops and usage of the "cut" command with sed
 
 # Versions
 
+## 0.14b
+
+- Attempting to create md5sum for transferred files
+	- Files with spaces in the name do not work
+		- "No such file or directory"
+- Formatted date columns
+
 ## 0.13.1
 
-- Fixed critical problem with downloading (would retrieve wrong files)
+- Fixed critical bug with downloading (would retrieve wrong files)
 	- Caused due to altering temp file with name of remote directory
 
 ## 0.13
