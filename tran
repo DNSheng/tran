@@ -8,6 +8,7 @@
 #		- If any errors occur, then tell user
 #		- Generate the md5 on the pi for the files used and transfer them over
 #	- Delete the temp file even if it prematurely ends (SIGKILL or SIGTERM)
+# - Fix the printlocaldir, doesn't print long-form directory
 
 # Check for arguments (flesh out later)
 if [[ $# -lt 2 ]]; then
@@ -29,7 +30,7 @@ localdir=$2
 counter=0
 
 # SSH in and write listed files to a hidden temp file
-ssh $addr "cd $dir && ls -lsh --escape" > .temp.txt
+ssh $addr "cd $dir && pwd && ls -lsh --escape" > .temp.txt
 
 # Error if remote directory doesn't exist
 if [[ "$?" != "0" ]]; then
@@ -37,8 +38,11 @@ if [[ "$?" != "0" ]]; then
 	exit
 fi
 
+# For display purposes
+remotedir=$(sed '1q;d' .temp.txt)
+
 # Display the remote directory
-echo -e "\n$dir:"
+echo -e "\n$remotedir:"
 
 # Read file to display all in remote directory
 while read line; do
@@ -75,8 +79,8 @@ done < .temp.txt
 counter=$(($counter - 1))
 
 # Get user's selection
-printlocaldir=$(pwd)
-echo -e "\nTransferring to $printlocaldir\nPlease select files to transfer:"
+printlocaldir=$(cd $localdir; pwd)
+echo -e "\nTransferring to $printlocaldir\nPlease select files to transfer (enter 0 to exit):"
 read selected
 echo ""
 
@@ -90,6 +94,9 @@ for items in $selected; do
 	endNum=$(echo $items | cut -d "-" -f2)
 	if [[ $endNum -gt $counter ]] || [[ $startNum -gt $endNum ]]; then
 		echo "One or more of items in selection is out of range"
+		rm .temp.txt
+		exit
+	elif [[ $startNum -eq 0 ]]; then
 		rm .temp.txt
 		exit
 	elif [[ $startNum -gt 0 ]]; then

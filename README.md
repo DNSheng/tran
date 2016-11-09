@@ -38,6 +38,11 @@ Afterwards, the files will be downloaded.
 
 # Versions
 
+## 0.13
+
+- Better displays the remote directory
+- Better displays the local directory
+
 ## 0.12
 
 - Now allows for selecting a range of files/folders
