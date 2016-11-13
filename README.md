@@ -26,18 +26,30 @@ Please enter your selection:
 ```
 Another password prompt will appear, again asking for the user@host password (uses scp to download).
 Afterwards, the files will be downloaded.
+A local md5 checksum file can be created if the flag "--md5" is used when the program is run.
+```
+tran --md5 pi@raspberrypi:~ ./Folder
+```
 
 # TODO
 
-- Add an md5 checksum at the end (after downloading) for files on the RPi 3 and other device to check for file integrity.
-	- Low priority, not sure how useful
+- Let an md5sum be created for files that include spaces (ex. "File\ Name.txt")
 - Deleting temp file after SIGKILL or SIGTERM
+	- Maybe not necessary
 - Navigation around folders in the remote host
 	- This is hard and will come late (if at all)
 - Clean up garbage code (unlikely, I may be the only one who will ever see and use this)
 - Replace loops and usage of the "cut" command with sed
+- Create a help menu?
+- Randomize name of tempfile created to prevent accidental overwrites
 
 # Versions
+
+## 0.14
+
+- Added flag for creating a local md5 checksum (creation disabled by default)
+	- Rewrote command line argument parsing as a result
+	- Now room/easier for more arguments
 
 ## 0.14b
 

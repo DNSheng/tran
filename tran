@@ -8,23 +8,26 @@
 #		- If any errors occur, then tell user
 #		- Generate the md5 on the pi for the files used and transfer them over
 #	- Delete the temp file even if it prematurely ends (SIGKILL or SIGTERM)
-# - Fix the printlocaldir, doesn't print long-form directory
+
+md5sumflag=0
 
 # Check for arguments (flesh out later)
-if [[ $# -lt 2 ]]; then
-	echo "Insufficent arguments"
-	exit
-elif [[ $# -gt 2 ]]; then
-	echo "Too many arguments"
-	exit
-fi
-
-# Get ssh address and remote directory
-addr=$(echo $1 | cut -d : -f1)
-dir=$(echo $1 | cut -d : -f2)
-
-# Local directory to transfer files to
-localdir=$2
+# md5sumflag for creating a md5sum of transferred files at the end
+# localdir is the local directory to transfer files to
+# addr is the address of the host
+# dir is the remote directory (within the host)
+for args in $@; do
+	if [[ $args == "--md5" ]]; then
+		md5sumflag=1
+	elif [[ $args == "--help" ]] || [[ $args == "-h" ]]; then
+		echo "No help exists... yet"
+	elif [[ -d $args ]]; then
+		localdir=$args
+	elif [[ $args == *[@]* ]]; then
+		addr=$(echo $args | cut -d ":" -f 1)
+		dir=$(echo $args | cut -d ":" -f 2)
+	fi
+done
 
 # Counter for listing in display
 counter=0
@@ -154,20 +157,25 @@ scp -r $addr:"$files" $localdir
 # TODO:
 #		- Somehow file names including spaces "\ " won't work
 #			- Something to do with the md5sum
+#		- When importing folders, ignore folder "file" and md5sum contents
+#			- Done recursively
+#			- For each item in list, check if it is a directory
 
 # Variable for for-loop
 startLoop=1
 
 # Build local checksum
-echo -e "\nGenerating local md5sum..."
-for (( item=$startLoop; item<=$numOfFiles; item++ )); do
-	currentFile=$(echo $localFiles | cut -d "|" -f$item)
-	if [[ $item == 1 ]]; then
-		md5sum "$currentFile" > $localdir/locmd5.txt
-	else
-		md5sum "$currentFile" >> $localdir/locmd5.txt
-	fi
-done
+if [[ $md5sumflag == 1 ]]; then
+	echo -e "\nGenerating local md5sum..."
+	for (( item=$startLoop; item<=$numOfFiles; item++ )); do
+		currentFile=$(echo $localFiles | cut -d "|" -f$item)
+		if [[ $item == 1 ]]; then
+			md5sum "$currentFile" > $localdir/local.md5
+		else
+			md5sum "$currentFile" >> $localdir/local.md5
+		fi
+	done
+fi
 
 ## CHECKSUM BLOCK -- UNFINISHED
 
